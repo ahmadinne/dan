@@ -1,0 +1,34 @@
++-----------------------------------------------------------------------+
+|	DAN or Dotfile mANager, a tiny scripts used to ease	your dotfile	| 
+|	management systems. written in bash.								|
++-----------------------------------------------------------------------+
+Dan is an independent hobby distribution made with a goal of being 
+compact, understandable, hackable, and easy to maintain.
+
+=== Features
+============
+Here are some of the features we had for now. These may change over time 
+as the project grows and develops:
+	- Sync
+	- Sync all
+	- Remove
+
+=== Codes
+=========
+The code is inspired by my dotfile manager project before this, it 
+called DotMan. But it had too many bugs and very dependant to linux, 
+meanwhile this DAN is not. But you still need bash, because it is 
+created with bash.
+
+=== Inspiration
+===============
+Dan was inspired by and made possibly by the following amazing
+projects:
+	- GNU Stow (https://www.gnu.org/software/stow)
+	- DotMan (https://github.com/ahmadinne/dotman)
+
+
+
+_________________________________________________________________________
+
+ahmadinne (C) 2025-2026
