@@ -1,23 +1,38 @@
 #! /usr/bin/env bash
 
-# Variables
+# ,-----------,
+# | Variables |
+# '-----------'
 curdir=$(pwd)
 option=$1
 choice=$(echo "${@:2}")
+cfgdir="$HOME/.config/dan"
+config="$cfgdir/config"
+lokasi=$(cat ${config} | grep path | awk '{print $3}')
+dancfg="${lokasi}/.dan"
+totals=0
+number=1
 
-# Functions
+# ,-----------,
+# | Functions |
+# '-----------'
 function init() {
 	if [ -z "$choice" ]; then
 		echo "please input the path or directory for initialize"
+		echo "example: 'dot init .' to current directory"
+		echo "example: 'dot init folder' to specified folder"
+		echo ""
 	else
-		case $1 in
-			.) touch ${curdir}/.dan ;;
-			*) touch ${curdir}/${choice}/.dan ;;
-		esac
+		if [[ "$choice" == "." ]]; then
+			touch ${curdir}/.dan 
+			echo "path = ${curdir}" > $config
+		else
+			touch ${curdir}/${choice}/.dan 
+			echo "path = ${curdir}/${choice}" > $config
+		fi
 	fi
 }
 
-# Checking current directory
 function check() {
 	if [[ ! -f "${curdir}/.dan" ]]; then
 		echo "not a dan directory (.dan missing)"
@@ -29,10 +44,57 @@ function check() {
 	fi
 }
 
+function total_count() {
+	for PKG in ${choice[@]}; do
+		totals=$((totals + 1))
+	done
+}
 
+function remove() {
+	total_count
+	for PKG in ${choice[@]}; do
+		if [[ -e "${lokasi}/${PKG}" ]]; then
+			rm -rf ${lokasi}/${PKG}
+			# tambahin code buat hapus dari list di dalam .dan
+			if [ $? -eq 0 ]; then
+				echo "($number/$totals) $PKG removed"
+			else
+				echo "($number/$totals) $PKG failed to remove"
+			fi
+		else
+			echo "there's no folder nor file named  $PKG in the dan!"
+		fi
+		number=$((number + 1))
+	done
+}
+
+function sync() {
+	total_count
+	for PKG in ${choice[@]}; do
+		# kalau ada di dotfiles, hapus
+		if [[ -e "${lokasi}/${PKG}" ]]; then rm -rf "${lokasi}/${PKG}"; fi
+		# kalau ada di directory sekarang, tambahin ke .dan list dan copy ke $lokasi
+		if [[ -e "${curdir}/${PKG}" ]]; then 
+			# Cek kalau ada apa engga di list .dan
+			awk '{print $3}' $dancfg | grep -qx "${curdir}/$PKG" || echo "${PKG} = ${curdir}/${PKG}" >> $dancfg
+		fi
+	done
+
+}
+
+# ,---------,
+# | Run it! |
+# '---------'
+if [[ ! -d $cfgdir ]]; then
+	mkdir $cfgdir
+elif [[ ! -f $config ]]; then
+	touch $config
+fi
 if [[ -n "$option" ]]; then
 	case $option in
 		init) init ;;
+		sync) sync ;;
+		remove) remove ;;
 		*) echo "wrong options (use 'dan help' for options list)"
 	esac
 else
