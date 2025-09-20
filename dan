@@ -1,5 +1,12 @@
 #! /usr/bin/env bash
 
+# ,---------,
+# | To - Do |
+# '---------'
+# - Apply function to copy from dan to local
+# - Help function for options list
+# - List function for seeing whats inside dan.
+
 # ,-----------,
 # | Variables |
 # '-----------'
@@ -45,9 +52,7 @@ function check() {
 }
 
 function total_count() {
-	for PKG in ${choice[@]}; do
-		totals=$((totals + 1))
-	done
+	for PKG in ${choice[@]}; do totals=$((totals + 1)); done
 }
 
 function remove() {
@@ -89,9 +94,7 @@ function sync() {
 			number=$((number + 1))
 		done
 	else
-		for PKG in $(ls ${lokasi}); do
-			totals=$((totals + 1))
-		done
+		for PKG in $(ls ${lokasi}); do totals=$((totals + 1)); done
 		for PKG in $(ls ${lokasi}); do
 			if [[ -e "${lokasi}/${PKG}" ]]; then rm -rf "${lokasi}/${PKG}"; fi
 			path=$(cat ${dancfg} | grep $PKG | awk '{print $3}')
