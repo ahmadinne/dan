@@ -6,6 +6,16 @@
 # - Apply function to copy from dan to local
 # - Help function for options list
 # - List function for seeing whats inside dan.
+#
+# ,----------------,
+# | Optional To-Do |
+# '----------------'
+# - Buat biar dan ngga cuma bisa satu folder dan, namun
+#	bisa banyak folder dan,
+#
+#	example usage:
+#	> dan sync dotfile-1 alacritty scoop etc.
+#	> dan remove dotfile-1 scoop etc.
 
 # ,-----------,
 # | Variables |
