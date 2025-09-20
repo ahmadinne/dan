@@ -54,13 +54,14 @@ function remove() {
 	total_count
 	for PKG in ${choice[@]}; do
 		if [[ -e "${lokasi}/${PKG}" ]]; then
+			# hapus pilihan pada .dan
+			path=$(cat ${dancfg} | grep $PKG | awk '{print $3}')
+			sed -i "\|${path}|d" $dancfg
+			# Hapus pilihan pada direktori dan
 			rm -rf ${lokasi}/${PKG}
 			# tambahin code buat hapus dari list di dalam .dan
-			if [ $? -eq 0 ]; then
-				echo "($number/$totals) $PKG removed"
-			else
-				echo "($number/$totals) $PKG failed to remove"
-			fi
+			[[ $? -eq 0 ]]; echo "($number/$totals) $PKG removed" \
+				|| echo "($number/$totals) $PKG failed to remove"
 		else
 			echo "there's no folder nor file named  $PKG in the dan!"
 		fi
@@ -70,26 +71,43 @@ function remove() {
 
 function sync() {
 	total_count
-	for PKG in ${choice[@]}; do
-		# kalau ada di dotfiles, hapus
-		if [[ -e "${lokasi}/${PKG}" ]]; then rm -rf "${lokasi}/${PKG}"; fi
-		# kalau ada di directory sekarang, tambahin ke .dan list dan copy ke $lokasi
-		if [[ -e "${curdir}/${PKG}" ]]; then 
-			# Cek kalau ada apa engga di list .dan
-			awk '{print $3}' $dancfg | grep -qx "${curdir}/$PKG" || echo "${PKG} = ${curdir}/${PKG}" >> $dancfg
-		fi
-	done
-
+	if [[ -n "$choice" ]]; then
+		for PKG in ${choice[@]}; do
+			# kalau ada di dotfiles, hapus
+			if [[ -e "${lokasi}/${PKG}" ]]; then rm -rf "${lokasi}/${PKG}"; fi
+			# kalau ada di directory sekarang, tambahin ke .dan list dan copy ke $lokasi
+			if [[ -e "${curdir}/${PKG}" ]]; then 
+				# Cek kalau ada apa engga di list .dan
+				awk '{print $3}' $dancfg | grep -qx "${curdir}/$PKG" || echo "${PKG} = ${curdir}/${PKG}" >> $dancfg
+				cp -rf ${curdir}/${PKG} ${lokasi}
+			else
+				path=$(cat ${dancfg} | grep $PKG | awk '{print $3}')
+				cp -rf $path $lokasi
+			fi
+			[[ $? -eq 0 ]]; echo "($number/$totals) $PKG synced" \
+				|| echo "($number/$totals) $PKG failed to syncs"
+			number=$((number + 1))
+		done
+	else
+		for PKG in $(ls ${lokasi}); do
+			totals=$((totals + 1))
+		done
+		for PKG in $(ls ${lokasi}); do
+			if [[ -e "${lokasi}/${PKG}" ]]; then rm -rf "${lokasi}/${PKG}"; fi
+			path=$(cat ${dancfg} | grep $PKG | awk '{print $3}')
+			cp -rf $path $lokasi
+			[[ $? -eq 0 ]]; echo "($number/$totals) $PKG synced" \
+				|| echo "($number/$totals) $PKG failed to syncs"
+			number=$((number + 1))
+		done
+	fi
 }
 
 # ,---------,
 # | Run it! |
 # '---------'
-if [[ ! -d $cfgdir ]]; then
-	mkdir $cfgdir
-elif [[ ! -f $config ]]; then
-	touch $config
-fi
+if [[ ! -d $cfgdir ]]; then mkdir $cfgdir; fi
+if [[ ! -f $config ]]; then touch $config; fi
 if [[ -n "$option" ]]; then
 	case $option in
 		init) init ;;
