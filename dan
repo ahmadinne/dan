@@ -1,0 +1,40 @@
+#! /usr/bin/env bash
+
+# Variables
+curdir=$(pwd)
+option=$1
+choice=$(echo "${@:2}")
+
+# Functions
+function init() {
+	if [ -z "$choice" ]; then
+		echo "please input the path or directory for initialize"
+	else
+		case $1 in
+			.) touch ${curdir}/.dan ;;
+			*) touch ${curdir}/${choice}/.dan ;;
+		esac
+	fi
+}
+
+# Checking current directory
+function check() {
+	if [[ ! -f "${curdir}/.dan" ]]; then
+		echo "not a dan directory (.dan missing)"
+		echo "'dan init' to make it dan."
+	else
+		echo "it is a dan directory :D"
+		echo "'dan help' for options."
+		echo ""
+	fi
+}
+
+
+if [[ -n "$option" ]]; then
+	case $option in
+		init) init ;;
+		*) echo "wrong options (use 'dan help' for options list)"
+	esac
+else
+	check
+fi
