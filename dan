@@ -3,7 +3,6 @@
 # ,---------,
 # | To - Do |
 # '---------'
-# - Apply function to copy from dan to local
 # - Help function for options list
 # - List function for seeing whats inside dan.
 #
@@ -20,15 +19,15 @@
 # ,-----------,
 # | Variables |
 # '-----------'
-curdir=$(pwd)
-option=$1
-choice=$(echo "${@:2}")
-cfgdir="$HOME/.config/dan"
-config="$cfgdir/config"
-lokasi=$(cat ${config} | grep path | awk '{print $3}')
-dancfg="${lokasi}/.dan"
-totals=0
-number=1
+curdir=$(pwd) #Directory saat ini.
+option=$1 #input pertama setelah command, ex: 'dan aoacona'. aoacona adalah option.
+choice=$(echo "${@:2}") #input setelah command dan option, ex: 'dan aoacona satu dua tiga'. satu dua tiga adalah choice.
+cfgdir="$HOME/.config/dan" #Directory untuk menyimpan konfigurasi dan.
+config="$cfgdir/config" #File untuk menyimpan konfigurasi dan, saat ini hanya berisi path dotfiles yang telah di initialize.
+lokasi=$(cat ${config} | grep path | awk '{print $3}') #Path atau lokasi dotfiles yang telah di-initialize dan tersimpan di konfig dan.
+dancfg="${lokasi}/.dan" #List directory dan file yang sudah di sync ke dan. menyimpan path untuk sync dan apply dari dotfiles.
+totals=0 #Variable untuk menghitung total package atau directory atau file
+number=1 #Variable untuk menghitung package atau directory atau file
 
 # ,-----------,
 # | Functions |
@@ -110,7 +109,38 @@ function sync() {
 			path=$(cat ${dancfg} | grep $PKG | awk '{print $3}')
 			cp -rf $path $lokasi
 			[[ $? -eq 0 ]]; echo "($number/$totals) $PKG synced" \
-				|| echo "($number/$totals) $PKG failed to syncs"
+				|| echo "($number/$totals) $PKG failed to sync."
+			number=$((number + 1))
+		done
+	fi
+}
+
+function apply() {
+	total_count
+	# Jika ada pkg yang diketik maka hanya meng-apply pkg tersebut, namun
+	# jika tidak ada pkg yang diketik, maka meng-apply ke semua pkg yang
+	# ada di dan.
+	if [[ -n "$choice" ]]; then
+		for PKG in ${choice[@]}; do
+			if [[ -e "${lokasi}/${PKG}" ]]; then 
+				path=$(cat ${dancfg} | grep $PKG | awk '{print $3}')
+				if [[ -e "${path}" ]]; then rm -rf ${path}; fi
+				cp -rf ${lokasi}/${PKG} $path
+				[[ $? -eq 0 ]]; echo "($number/$totals) $PKG applied to local" \
+					|| echo "($number/$totals) $PKG failed to apply to local."
+				number=$((number + 1))
+			else
+				echo "there's no dir nor file named $PKG in the dan"
+			fi
+		done
+	else
+		for PKG in $(ls ${lokasi}); do totals=$((totals + 1)); done
+		for PKG in $(ls ${lokasi}); do
+			path=$(cat ${dancfg} | grep $PKG | awk '{print $3}')
+			if [[ -e "${path}" ]]; then rm -rf ${path}; fi
+			cp -rf ${lokasi}/${PKG} $path
+			[[ $? -eq 0 ]]; echo "($number/$totals) $PKG applied to local" \
+				|| echo "($number/$totals) $PKG failed to apply to local."
 			number=$((number + 1))
 		done
 	fi
@@ -125,6 +155,7 @@ if [[ -n "$option" ]]; then
 	case $option in
 		init) init ;;
 		sync) sync ;;
+		apply) apply ;;
 		remove) remove ;;
 		*) echo "wrong options (use 'dan help' for options list)"
 	esac
