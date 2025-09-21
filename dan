@@ -1,11 +1,5 @@
 #! /usr/bin/env bash
 
-# ,---------,
-# | To - Do |
-# '---------'
-# - Help function for options list
-# - List function for seeing whats inside dan.
-#
 # ,----------------,
 # | Optional To-Do |
 # '----------------'
