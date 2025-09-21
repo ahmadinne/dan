@@ -44,6 +44,27 @@ projects:
 	- Tin-Can Linux (https://tincan-linux.github.io/)
 
 
+=== Installation
+================
+
+	- Windows 11
+	You need to have bash or Git Bash installed on your systems
+	Step-by-step Installation on w11:
+		- git clone https://github.com/ahmadinne/dan
+		- cd dan
+		- choose one:
+			- ln -f dan /usr/bin (if you wouldn't delete the folder)
+			- cp -rf dan /usr/bin (if you will delete the folder)
+	There you go, Dan is ready to use!
+
+	- Linux
+	Step-by-step installation on linux:
+		- git clone https://github.com/ahmadinne/dan
+		- cd dan
+		- choose one:
+			- ln -sf dan /usr/bin (if you wouldn't delete the folder)
+			- cp -rf dan /usr/bin (if you will delete the folder)
+	There you go, Dan is ready to use!
 
 
 _________________________________________________________________________
