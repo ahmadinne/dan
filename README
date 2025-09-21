@@ -46,9 +46,11 @@ projects:
 
 === Installation
 ================
+Here are some installation tutorial step-by-step for some Operating
+Systems:
 
 	- Windows 11
-	You need to have bash or Git Bash installed on your systems
+	You need to have Git Bash installed on your system
 	Step-by-step Installation on w11:
 		- git clone https://github.com/ahmadinne/dan
 		- cd dan
@@ -58,6 +60,7 @@ projects:
 	There you go, Dan is ready to use!
 
 	- Linux
+	You need to have git installed on your system.
 	Step-by-step installation on linux:
 		- git clone https://github.com/ahmadinne/dan
 		- cd dan
