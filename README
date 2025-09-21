@@ -13,7 +13,11 @@ as the project grows and develops:
 
 	- Sync
 
+	- Apply
+
 	- Sync all
+
+	- Apply all
 
 	- Remove
 
@@ -34,6 +38,8 @@ projects:
 	- GNU Stow (https://www.gnu.org/software/stow)
 
 	- DotMan (https://github.com/ahmadinne/dotman)
+
+	- Tin-Can Linux (https://tincan-linux.github.io/)
 
 
 
