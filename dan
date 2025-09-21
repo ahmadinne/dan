@@ -1,5 +1,10 @@
 #! /usr/bin/env bash
 
+# .-------.
+# | Todos |
+# '-------'
+# - Confirmation before do something, just like in dotman before.
+#
 # ,----------------,
 # | Optional To-Do |
 # '----------------'
