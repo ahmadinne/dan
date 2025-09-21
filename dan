@@ -40,6 +40,7 @@ a tiny and simple Dotfile mANager.
 usage: dan <operation> [...]
 operations:
 	dan help			Show the help page, list of operations and batch operations.
+	dan list			Show existing folder or files inside dotfiles.
 	dan init .			Initialize current directory as dotfiles directory.
 	dan sync [package(s)]		Add specified folder or file into dotfiles.
 	dan apply [package(s)]		Apply specified folder or file from dotfiles into local.
@@ -52,6 +53,28 @@ batch operations:
 use 'dan help' to show this page.
 EOF
 	exit 1
+}
+
+function list() {
+    JARAK=30; BLUE="\033[1;34m"; BLACK="\033[0;30m"; NONE="\033[0m"
+    username=$(echo $(whoami))
+	dotfilepath=$(echo ${lokasi} | sed "s|/home/${username}|~|")
+	dotfilepath=$(echo ${lokasi} | sed "s|/c/Users/${username}|~|")
+    printf "${BLACK}##${NONE}[${BLUE}Dan${NONE}] ${dotfilepath}\n"
+    for list in $(ls -a ${lokasi}); do
+		if [[ "$list" != "." ]] && [[ "$list" != ".." ]]; then
+			if [ -d "${lokasi}/${list}" ]; then
+					printf "${BLACK}-- ${BLUE} "
+					printf "$(printf "%-${JARAK}s" "$list")${NONE}\n"
+			elif [ -f "${lokasi}/${list}" ]; then
+					printf "${BLACK}-- ${NONE} "
+					printf "$(printf "%-${JARAK}s" "$list")\n"
+			else
+				echo "there's nothing in your dotfiles($dotfilepath)."
+				echo "start syncing your configuration using 'dan sync'"
+			fi
+		fi
+    done
 }
 
 function init() {
@@ -164,6 +187,7 @@ if [[ ! -f $config ]]; then touch $config; fi
 if [[ -n "$option" ]]; then
 	case $option in
 		help) help ;;
+		list) list ;;
 		init) init ;;
 		sync) sync ;;
 		apply) apply ;;
