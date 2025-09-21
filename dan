@@ -4,6 +4,8 @@
 # | Todos |
 # '-------'
 # - Confirmation before do something, just like in dotman before.
+# - .danignore file to ignore file from dan syncall and dan applyall.
+# - or just make checking all file or folder inside dotfiles using cat .dan and not using ls.
 #
 # ,----------------,
 # | Optional To-Do |
