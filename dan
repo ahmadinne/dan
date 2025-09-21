@@ -32,6 +32,28 @@ number=1 #Variable untuk menghitung package atau directory atau file
 # ,-----------,
 # | Functions |
 # '-----------'
+function help() {
+	cat <<EOF
+DAN
+a tiny and simple Dotfile mANager.
+
+usage: dan <operation> [...]
+operations:
+	dan help			Show the help page, list of operations and batch operations.
+	dan init .			Initialize current directory as dotfiles directory.
+	dan sync [package(s)]		Add specified folder or file into dotfiles.
+	dan apply [package(s)]		Apply specified folder or file from dotfiles into local.
+	dan remove [package(s)]		Remove specified folder or file from dotfiles.
+
+batch operations:
+	dan sync			Sync all folder or files inside dotfiles with local.
+	dan apply			Apply all folder or files inside dotfiles into local.
+
+use 'dan help' to show this page.
+EOF
+	exit 1
+}
+
 function init() {
 	if [ -z "$choice" ]; then
 		echo "please input the path or directory for initialize"
@@ -49,20 +71,8 @@ function init() {
 	fi
 }
 
-function check() {
-	if [[ ! -f "${curdir}/.dan" ]]; then
-		echo "not a dan directory (.dan missing)"
-		echo "'dan init' to make it dan."
-	else
-		echo "it is a dan directory :D"
-		echo "'dan help' for options."
-		echo ""
-	fi
-}
-
-function total_count() {
-	for PKG in ${choice[@]}; do totals=$((totals + 1)); done
-}
+function check() { if [[ ! -f "${curdir}/.dan" ]]; then echo -e "not a dan directory (.dan missing)\n'dan init' to make it dan.\n"; else echo -e "it is a dan directory :D\n'dan help' for list of options.\n"; fi }
+function total_count() { for PKG in ${choice[@]}; do totals=$((totals + 1)); done }
 
 function remove() {
 	total_count
@@ -153,6 +163,7 @@ if [[ ! -d $cfgdir ]]; then mkdir $cfgdir; fi
 if [[ ! -f $config ]]; then touch $config; fi
 if [[ -n "$option" ]]; then
 	case $option in
+		help) help ;;
 		init) init ;;
 		sync) sync ;;
 		apply) apply ;;
