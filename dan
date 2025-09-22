@@ -7,6 +7,9 @@
 # - .danignore file to ignore file from dan syncall and dan applyall.
 # - or just make checking all file or folder inside dotfiles using cat .dan and not using ls.
 #
+# - Make every sync and remove trigger git commits so you can easily convert back to previous version using git.
+# - Maybe add 'dan reverse' to revert to previous commit?
+#
 # ,----------------,
 # | Optional To-Do |
 # '----------------'
