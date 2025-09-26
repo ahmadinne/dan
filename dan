@@ -84,8 +84,8 @@ function list() {
 function init() {
 	if [ -z "$choice" ]; then
 		echo "please input the path or directory for initialize"
-		echo "example: 'dot init .' to current directory"
-		echo "example: 'dot init folder' to specified folder"
+		echo "example: 'dan init .' to current directory"
+		echo "example: 'dan init folder' to specified folder"
 		echo ""
 	else
 		if [[ "$choice" == "." ]]; then
