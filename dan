@@ -186,8 +186,7 @@ function apply() {
 # ,---------,
 # | Run it! |
 # '---------'
-if [[ ! -d $cfgdir ]]; then mkdir $cfgdir && touch $config; fi
-if [[ ! -f $config ]]; then touch $config; fi
+if [[ ! -f $config ]] && [[ ! -d $cfgdir ]]; then mkdir $cfgdir && touch $config; fi
 if [[ -n "$option" ]]; then
 	case $option in
 		help) help ;;
