@@ -30,6 +30,7 @@ cfgdir="$HOME/.config/dan" #Directory untuk menyimpan konfigurasi dan.
 config="$cfgdir/config" #File untuk menyimpan konfigurasi dan, saat ini hanya berisi path dotfiles yang telah di initialize.
 lokasi=$(cat ${config} | grep path | awk '{print $3}') #Path atau lokasi dotfiles yang telah di-initialize dan tersimpan di konfig dan.
 dancfg="${lokasi}/.dan" #List directory dan file yang sudah di sync ke dan. menyimpan path untuk sync dan apply dari dotfiles.
+pkglist=$(cat ${dancfg} | awk '{print $1}')
 totals=0 #Variable untuk menghitung total package atau directory atau file
 number=1 #Variable untuk menghitung package atau directory atau file
 
@@ -140,8 +141,8 @@ function sync() {
 			number=$((number + 1))
 		done
 	else
-		for PKG in $(ls ${lokasi}); do totals=$((totals + 1)); done
-		for PKG in $(ls ${lokasi}); do
+		for PKG in ${pkglist[@]}; do totals=$((totals + 1)); done
+		for PKG in ${pkglist[@]}; do
 			if [[ -e "${lokasi}/${PKG}" ]]; then rm -rf "${lokasi}/${PKG}"; fi
 			path=$(cat ${dancfg} | grep $PKG | awk '{print $3}')
 			cp -rf $path $lokasi
@@ -171,8 +172,8 @@ function apply() {
 			fi
 		done
 	else
-		for PKG in $(ls ${lokasi}); do totals=$((totals + 1)); done
-		for PKG in $(ls ${lokasi}); do
+		for PKG in ${pkglist[@]}; do totals=$((totals + 1)); done
+		for PKG in ${pkglist[@]}; do
 			path=$(cat ${dancfg} | grep $PKG | awk '{print $3}')
 			if [[ -e "${path}" ]]; then rm -rf ${path}; fi
 			cp -rf ${lokasi}/${PKG} $path
@@ -186,7 +187,7 @@ function apply() {
 # ,---------,
 # | Run it! |
 # '---------'
-if [[ ! -f $config ]] && [[ ! -d $cfgdir ]]; then mkdir $cfgdir && touch $config; fi
+if [[ ! -f $config ]] && [[ ! -d $cfgdir ]] && [[ ! -d "$HOME/.config" ]]; then mkdir $HOME/.config && mkdir $cfgdir && touch $config; fi
 if [[ -n "$option" ]]; then
 	case $option in
 		help) help ;;
