@@ -12,7 +12,7 @@ $lokasi = (gc $config | sls -SimpleMatch "path" | foreach { ($_ -split '=',2)[1]
 $dancfg = "${lokasi}\.dan"
 
 $pkglist = gc $dancfg | foreach { ($_ -split '\s+')[0] } | sort
-$number = 1
+$number = 0
 
 # ,-----------,
 # | Functions |
