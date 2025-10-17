@@ -1,19 +1,20 @@
-#! /usr/bin/env powershell
+#! \usr\bin\env powershell
 
 # ,-----------,
 # | Variables |
 # '-----------'
 $curdir = (gl).path
 $option = $args[0]
-$choice = $args[1..($args.Length - 1)] -join ' '
+$choice = $args[1..($args.Length - 1)] -join " "
 $cfgdir = "~\.config\dan"
 $config = "${cfgdir}\config"
 $lokasi = (gc $config | sls "path" | foreach { ($_ -split '\s+')[2] })
 $dancfg = "${lokasi}\.dan"
 
-$pkglist = (gc $dancfg | foreach { ($_ -split '\s+')[0] })
-$totals = 0
+$pkglist = (gc $dancfg | foreach { ($_ -split '\s+')[0] } | sort)
 $number = 1
+
+"$choice"
 
 # ,-----------,
 # | Functions |
@@ -40,31 +41,108 @@ use 'dan help' to show this page."
 }
 
 function list() {
-	$JARAK=30; $BLUE="\033[1;34m"; $BLACK="\033[0;30m"; $NONE="\033[0m"
 	$username = ($env:USERNAME)
-	$dotfilepath = ($lokasi -replace "/home/${username}", "~")
-	$dotfilepath = ($lokasi -replace "/c/Users/${username}", "~")
+	$dotfilepath = ($lokasi -replace "C:\\Users\\${username}", "~")
+	Write-Host "-- " -ForegroundColor black -NoNewLine
+	Write-Host "[" -nonewline
+	Write-Host "Dan" -ForegroundColor blue -nonewline
+	Write-Host "]" -nonewline
+	Write-Host " $dotfilepath"
+	foreach ($list in $pkglist) {
+		if (Test-Path "${lokasi}\${list}" -PathType Leaf) {
+			Write-Host "-- " -ForegroundColor black -nonewline
+			Write-Host " " -nonewline
+			Write-Host "$list"
+		}
+		if (Test-Path "${lokasi}\${list}" -PathType Container) {
+			Write-Host "-- " -ForegroundColor black -nonewline
+			Write-Host " " -nonewline -ForegroundColor blue
+			Write-Host "$list" -ForegroundColor blue
+		}
+	}
 }
 
 function init() {
 	if ( (Test-Path "$config") -and ( (Get-Item "$config").length -eq 0) ) {
-		"There are no path for your dotfiles."
-		"Please do 'dan init' inside the directory"
-		"to set it as the path"
-		""
+		"Set current directory as the dotfile path?"
+		$answer = Read-Host "[y\N]"
+		if ($answer -eq "Y" -or $answer -eq "y") {
+			# $curdir -replace "\c", ""
+			"path = ${curdir}" > $config
+		}
 	} else {
 		"There are already path set for your dotfiles,"
 		"are you sure to overwrite it?"
-		$answer = Read-Host "[y/N]"
+		$answer = Read-Host "[y\N]"
 		if ($answer -eq "Y" -or $answer -eq "y") {
-			$curdir -replace "/c", ""
-			New-Item ${curdir}/.dan -ItemType File | Out-Null
+			# $curdir -replace "\c", ""
 			"path = ${curdir}" > $config
 		}
 	}
 }
 
+function total_count() {
+	$totals = 0
+	foreach ($pkg in ($choice -split " ")) {
+		$totals++
+	}
+	return $totals
+}
+$totals = total_count
 
+function remove() {
+	total_count
+	foreach ($pkg in $choice) {
+		if (Test-Path "${lokasi}\${pkg}") {
+			Write-Host "(${number}\${totals}) $pkg" -nonewline
+			# Delete choices in '.dan'
+			$path = (gc $dancfg | sls $pkg | foreach { ($_ -split '\s+')[2] })
+			gc $dancfg | ? { $_ -notmatch [regex]::Escape($path) } | sc $dancfg
+			$?; if ($?) { Write-Host "Removed" -nonewline } else { Write-Host "Failed" -nonewline -foregroundcolor red }
+			# Delete choice inside dotfiles directory
+			rm -force ${lokasi}\${pkg}
+			$?; if ($?) { Write-Host "Deleted" -nonewline } else { Write-Host "Failed" -nonewline -foregroundcolor red }
+		} else {
+			"there's no folder nor file named $pkg in the dotfiles!"
+		}
+		$number++
+	}
+}
+
+function sync() {
+	total_count
+	if ([string]::IsNullOrEmpty($choice)) {
+		foreach ($pkg in $pkglist) { $totals++ }
+		foreach ($pkg in $pkglist) {
+			if (Test-Path "${lokasi}\${pkg}") { rm -Force "${lokasi}\${pkg}" }
+			$path = (gc $dancfg | sls $pkg | foreach { ($_ -split '\s+')[2] })
+			cp -Recurse -Force "$path" "$lokasi"
+			$number++
+		}
+	} else {
+		foreach ($pkg in ($choice -split " ")) {
+			# if existed in dotfiles, delete
+			if (Test-Path "${lokasi}\${pkg}") { rm -Recurse -Force -Confirm:$false "${lokasi}\${pkg}" }
+			# if existed in current directory, then
+			if (Test-Path "${curdir}\${pkg}") {
+				Write-Host "(${number}\${totals}) $pkg" -nonewline
+				# check if exist in .dan, if not add to .dan
+				$match = gc $dancfg | foreach { ($_ -split '\s+')[2] } | where { $_ -eq "${curdir}\${pkg}" }
+				if (-not $match) { "$pkg = ${curdir}\${pkg}" | Out-File -FilePath $dancfg -Append -Encoding utf8 }
+				if ($?) { Write-Host " Synced" -nonewline -foregroundcolor green } else { Write-Host " Failed" -nonewline -foregroundcolor red }
+				# then copy choices to dotfiles
+				cp -Recurse -Force -Confirm:$false "${curdir}\${pkg}" "$lokasi"
+				if ($?) { Write-Host " Copied" -foregroundcolor green } else { Write-Host " Failed" -foregroundcolor red } 
+			} else {
+				Write-Host "(${number}\${totals}) $pkg" -nonewline
+				$path = (gc $dancfg | sls $pkg | foreach { ($_ -split '\s+')[2] })
+				cp -Recurse -Force -Confirm:$false "$path" "$lokasi"
+				if ($?) { Write-Host " Copied" -foregroundcolor green } else { Write-Host " Failed" -foregroundcolor red } 
+			}
+			$number++
+		}
+	}
+}
 
 # ,---------,
 # | Run it! |
@@ -72,9 +150,16 @@ function init() {
 if ([string]::IsNullOrEmpty($option)) {
 	"Dan - Dotfile mANager"
 	""
-	"Your dotfile path:"
-	"$lokasi"
-	""
+	if ( (Test-Path "$config") -and ( (Get-Item "$config").length -eq 0) ) {
+		"There are no path for your dotfiles."
+		"Please do 'dan init' inside the directory"
+		"to set it as the path."
+		""
+	} else {
+		"Your dotfile path:"
+		"$lokasi"
+		""
+	}
 } else {
 	switch ($option) {
 		"help" { help }
