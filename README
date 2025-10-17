@@ -1,6 +1,6 @@
 +-----------------------------------------------------------------------+
 |	DAN or Dotfile mANager, a tiny scripts used to ease	your dotfile	| 
-|	management systems. written in bash.								|
+|	management systems. written in bash and powershell.					|
 +-----------------------------------------------------------------------+
 Dan is an independent hobby distribution made with a goal of being 
 compact, understandable, hackable, and easy to maintain.
@@ -28,8 +28,8 @@ as the project grows and develops:
 =========
 The code is inspired by my dotfile manager project before this, it 
 called DotMan. But it had too many bugs and very dependant to linux, 
-meanwhile this DAN is not. But you still need bash, because it is 
-created with bash.
+meanwhile this DAN is not. But you still need bash or powershell, 
+because it is created with bash and powershell.
 
 
 === Inspiration
@@ -50,23 +50,25 @@ Here are some installation tutorial step-by-step for some Operating
 Systems:
 
 	- Windows 11
-	You need to have Git Bash installed on your system
+	You need to have Scoop and Powershell installed on your system.
+	Powershell already installed by system, So you just need to 
+	install scoop.
 	Step-by-step Installation on w11:
+		- open your terminal, and then paste command below (one by one)
+		- Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+		- Invoke-RestMethod -Uri https://get.scoop.sh | Invoke-Expression
 		- git clone https://github.com/ahmadinne/dan
 		- cd dan
-		- choose one:
-			- ln -f dan /usr/bin (if you wouldn't delete the folder)
-			- cp -rf dan /usr/bin (if you will delete the folder)
+		- .\install.ps1
 	There you go, Dan is ready to use!
 
 	- Linux
 	You need to have git installed on your system.
 	Step-by-step installation on linux:
+		- Open your terminal, and then paste command below (one by one)
 		- git clone https://github.com/ahmadinne/dan
 		- cd dan
-		- choose one:
-			- ln -sf dan /usr/bin (if you wouldn't delete the folder)
-			- cp -rf dan /usr/bin (if you will delete the folder)
+		- cp -rf dan /usr/bin (if you will delete the folder)
 	There you go, Dan is ready to use!
 
 
