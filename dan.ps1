@@ -8,7 +8,7 @@ $option = $args[0]
 if ($args.Length -gt 1) { $choice = $args[1..($args.Length - 1)] -join " " } else { $choice = "" }
 $cfgdir = "~\.config\dan"
 $config = "${cfgdir}\config"
-$lokasi = (gc $config | sls "path" | foreach { ($_ -split '\s+')[2] })
+$lokasi = (gc $config | sls -SimpleMatch "path" | foreach { ($_ -split '=',2)[1].Trim() })
 $dancfg = "${lokasi}\.dan"
 
 $pkglist = gc $dancfg | foreach { ($_ -split '\s+')[0] } | sort
@@ -85,21 +85,28 @@ $totals = total_count
 
 function remove() {
 	total_count
-	foreach ($pkg in $choice) {
-		if (Test-Path "${lokasi}\${pkg}") {
+	Write-Host "You will remove those from the dotfiles" -foregroundcolor red
+	Write-Host "Continue to remove those? " -nonewline
+	$answer = Read-Host "[y\N]"
+	if ($answer -eq "Y" -or $answer -eq "y") {
+		foreach ($pkg in ($choice -split " ")) {
 			Write-Host "(${number}\${totals}) $pkg" -nonewline
-			# Delete choices in '.dan'
-			$path = (gc $dancfg | sls -SimpleMatch $pkg | foreach { ($_ -split '\s+')[2] })
-			gc $dancfg | ? { $_ -notmatch [regex]::Escape($path) } | sc $dancfg
-			if ($?) { Write-Host "Removed" -nonewline } else { Write-Host "Failed" -nonewline -foregroundcolor red }
-			# Delete choice inside dotfiles directory
-			rm -force ${lokasi}\${pkg}
-			if ($?) { Write-Host "Deleted" -nonewline } else { Write-Host "Failed" -nonewline -foregroundcolor red }
-		} else {
-			"there's no folder nor file named $pkg in the dotfiles!"
+			if (Test-Path "${lokasi}\${pkg}") {
+				# Delete choices in '.dan'
+				$rem = gc $dancfg | where {
+					($_.Split('=',2)[0].Trim()) -ne "$pkg"
+				}
+				$rem | sc $dancfg -Encoding utf8
+				if ($?) { Write-Host " Removed" -foregroundcolor green -nonewline } else { Write-Host " Failed" -foregroundcolor red -nonewline }
+				# Delete choice inside dotfiles directory
+				rm -Recurse -Force -Confirm:$false ${lokasi}\${pkg}
+				if ($?) { Write-Host " Deleted" -foregroundcolor green -nonewline } else { Write-Host " Failed" -foregroundcolor red -nonewline }
+			} else {
+				"there's no folder nor file named $pkg in the dotfiles!"
+			}
+			$number++
 		}
-		$number++
-	}
+	} else { Write-Host "Process cancelled." -foregroundcolor yellow }
 }
 
 function sync() {
@@ -147,7 +154,7 @@ function sync() {
 					if ($?) { Write-Host " Copied" -foregroundcolor green } else { Write-Host " Failed" -foregroundcolor red } 
 				} else {
 					Write-Host "(${number}\${totals}) $pkg" -nonewline
-					$path = (gc $dancfg | sls -SimpleMatch $pkg | foreach { ($_ -split '\s+')[2] })
+					$path = (gc $dancfg | sls -SimpleMatch $pkg | foreach { ($_ -split '=',2)[1].Trim() })
 					cp -Recurse -Force -Confirm:$false "$path" "$lokasi"
 					if ($?) { Write-Host " Copied" -foregroundcolor green } else { Write-Host " Failed" -foregroundcolor red } 
 				}
