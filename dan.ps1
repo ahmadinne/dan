@@ -12,7 +12,7 @@ $lokasi = (gc $config | sls -SimpleMatch "path" | foreach { ($_ -split '=',2)[1]
 $dancfg = "${lokasi}\.dan"
 
 $pkglist = gc $dancfg | foreach { ($_ -split '\s+')[0] } | sort
-$number = 0
+$number = 1
 
 # ,-----------,
 # | Functions |
@@ -80,7 +80,7 @@ function init() {
 	}
 }
 
-function total_count() { $totals = 0; foreach ($pkg in ($choice -split " ")) { $totals++ }; return $totals }
+function total_count() { $totals = -1; foreach ($pkg in ($choice -split " ")) { $totals++ }; return $totals }
 $totals = total_count
 
 function remove() {
