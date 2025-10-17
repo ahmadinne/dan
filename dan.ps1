@@ -5,16 +5,14 @@
 # '-----------'
 $curdir = (gl).path
 $option = $args[0]
-$choice = $args[1..($args.Length - 1)] -join " "
+if ($args.Length -gt 1) { $choice = $args[1..($args.Length - 1)] -join " " } else { $choice = "" }
 $cfgdir = "~\.config\dan"
 $config = "${cfgdir}\config"
 $lokasi = (gc $config | sls "path" | foreach { ($_ -split '\s+')[2] })
 $dancfg = "${lokasi}\.dan"
 
-$pkglist = (gc $dancfg | foreach { ($_ -split '\s+')[0] } | sort)
+$pkglist = gc $dancfg | foreach { ($_ -split '\s+')[0] } | sort
 $number = 1
-
-"$choice"
 
 # ,-----------,
 # | Functions |
@@ -81,13 +79,7 @@ function init() {
 	}
 }
 
-function total_count() {
-	$totals = 0
-	foreach ($pkg in ($choice -split " ")) {
-		$totals++
-	}
-	return $totals
-}
+function total_count() { $totals = 0; foreach ($pkg in ($choice -split " ")) { $totals++ }; return $totals }
 $totals = total_count
 
 function remove() {
@@ -96,7 +88,7 @@ function remove() {
 		if (Test-Path "${lokasi}\${pkg}") {
 			Write-Host "(${number}\${totals}) $pkg" -nonewline
 			# Delete choices in '.dan'
-			$path = (gc $dancfg | sls $pkg | foreach { ($_ -split '\s+')[2] })
+			$path = (gc $dancfg | sls -SimpleMatch $pkg | foreach { ($_ -split '\s+')[2] })
 			gc $dancfg | ? { $_ -notmatch [regex]::Escape($path) } | sc $dancfg
 			$?; if ($?) { Write-Host "Removed" -nonewline } else { Write-Host "Failed" -nonewline -foregroundcolor red }
 			# Delete choice inside dotfiles directory
@@ -111,12 +103,14 @@ function remove() {
 
 function sync() {
 	total_count
-	if ([string]::IsNullOrEmpty($choice)) {
+	if ([string]::IsNullOrWhiteSpace($choice)) {
 		foreach ($pkg in $pkglist) { $totals++ }
 		foreach ($pkg in $pkglist) {
-			if (Test-Path "${lokasi}\${pkg}") { rm -Force "${lokasi}\${pkg}" }
-			$path = (gc $dancfg | sls $pkg | foreach { ($_ -split '\s+')[2] })
-			cp -Recurse -Force "$path" "$lokasi"
+			Write-Host "(${number}\${totals}) $pkg" -nonewline
+			if (Test-Path "${lokasi}\${pkg}") { rm -Recurse -Force -Confirm:$false "${lokasi}\${pkg}" }
+			$path = (gc $dancfg | sls -SimpleMatch $pkg | foreach { ($_ -split '\s+')[2] })
+			cp -Recurse -Force -Confirm:$false "$path" "$lokasi"
+			if ($?) { Write-Host " Copied" -foregroundcolor green } else { Write-Host " Failed" -foregroundcolor red } 
 			$number++
 		}
 	} else {
@@ -125,17 +119,18 @@ function sync() {
 			if (Test-Path "${lokasi}\${pkg}") { rm -Recurse -Force -Confirm:$false "${lokasi}\${pkg}" }
 			# if existed in current directory, then
 			if (Test-Path "${curdir}\${pkg}") {
+				$pkg = Split-Path $pkg -Leaf
 				Write-Host "(${number}\${totals}) $pkg" -nonewline
 				# check if exist in .dan, if not add to .dan
 				$match = gc $dancfg | foreach { ($_ -split '\s+')[2] } | where { $_ -eq "${curdir}\${pkg}" }
-				if (-not $match) { "$pkg = ${curdir}\${pkg}" | Out-File -FilePath $dancfg -Append -Encoding utf8 }
+				if (-not $match) { "$pkg = ${curdir}\${pkg}" | Out-File "$dancfg" -Encoding utf8 -Append }
 				if ($?) { Write-Host " Synced" -nonewline -foregroundcolor green } else { Write-Host " Failed" -nonewline -foregroundcolor red }
 				# then copy choices to dotfiles
 				cp -Recurse -Force -Confirm:$false "${curdir}\${pkg}" "$lokasi"
 				if ($?) { Write-Host " Copied" -foregroundcolor green } else { Write-Host " Failed" -foregroundcolor red } 
 			} else {
 				Write-Host "(${number}\${totals}) $pkg" -nonewline
-				$path = (gc $dancfg | sls $pkg | foreach { ($_ -split '\s+')[2] })
+				$path = (gc $dancfg | sls -SimpleMatch $pkg | foreach { ($_ -split '\s+')[2] })
 				cp -Recurse -Force -Confirm:$false "$path" "$lokasi"
 				if ($?) { Write-Host " Copied" -foregroundcolor green } else { Write-Host " Failed" -foregroundcolor red } 
 			}
