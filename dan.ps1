@@ -80,8 +80,10 @@ function init() {
 	}
 }
 
-function total_count() { $totals = -1; foreach ($pkg in ($choice -split " ")) { $totals++ }; return $totals }
+function total_count() { $totals = 0; foreach ($pkg in ($choice -split " ")) { $totals++ }; return $totals }
+function total_counts() { $totals = -1; foreach ($pkg in ($choice -split " ")) { $totals++ }; return $totals }
 $totals = total_count
+$totalss = total_counts
 
 function remove() {
 	total_count
@@ -110,7 +112,7 @@ function remove() {
 }
 
 function sync() {
-	total_count
+	total_counts
 	if ([string]::IsNullOrWhiteSpace($choice)) {
 		Write-Host "It'll  replace everything inside the dotfiles" -foregroundcolor red
 		Write-Host "with everything from the localhost" -foregroundcolor red
