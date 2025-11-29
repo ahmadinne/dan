@@ -6,12 +6,12 @@
 $curdir = (gl).path
 $option = $args[0]
 if ($args.Length -gt 1) { $choice = $args[1..($args.Length - 1)] -join " " } else { $choice = "" }
-$cfgdir = "~\.config\dan"
-$config = "${cfgdir}\config"
-$lokasi = (gc $config | sls -SimpleMatch "path" | foreach { ($_ -split '=',2)[1].Trim() })
-$dancfg = "${lokasi}\.dan"
+$cfgdir = "~\.config\dan" #Dan configuration options folder
+$config = "${cfgdir}\config" #Dan configuration options file
+$lokasi = (gc $config | sls -SimpleMatch "path" | foreach { ($_ -split '=',2)[1].Trim() }) #path for the dotfiles
+$dancfg = "${lokasi}\.dan" #path for the list of path for the folders inside the dotfiles
 
-$pkglist = gc $dancfg | foreach { ($_ -split '\s+')[0] } | sort
+$pkglist = gc $dancfg | foreach { ($_ -split '\s+')[0] } | sort #List of Path for the folders inside the dotfiles
 $number = 1
 
 # ,-----------,
@@ -166,7 +166,26 @@ function sync() {
 	}
 }
 
-function apply() {}
+function apply() {
+	total_counts
+	if ([string]::IsNullorWhiteSpace($choice)) {
+		Write-Host "It'll  replace everything on the local side" -foregroundcolor red
+		Write-Host "with everything from the dotfiles" -foregroundcolor red
+		Write-Host "Continue to apply all? " -nonewline
+		$answer = Read-Host "[y\N]"
+		if ($answer -eq "Y" -or $answer -eq "y") {
+			foreach ($pkg in $pkglist) { $totals++ }
+			foreach ($pkg in $pkglist) {
+				$path = (gc $dancfg | sls -SimpleMatch $pkg | foreach { ($_ -split '=',2)[1].Trim() })
+				Write-Host "(${number}\${totals}) $pkg" -nonewline
+				if (Test-Path "${path}") { rm -Recurse -Force -Confirm:$false "${path}" } #Delete first if folders already there.
+				cp -Recurse -Force -Confirm:$false "${lokasi}/${pkg}" "$path"
+				if ($?) { Write-Host " Applied" -foregroundcolor green } else { Write-Host " Failed" -foregroundcolor red } 
+				$number++
+			}
+		} else { Write-Host "Process cancelled." -foregroundcolor yellow }
+	} else {}
+}
 
 # ,---------,
 # | Run it! |
