@@ -83,10 +83,9 @@ function init() {
 function total_count() { $totals = 0; foreach ($pkg in ($choice -split " ")) { $totals++ }; return $totals }
 function total_counts() { $totals = -1; foreach ($pkg in ($choice -split " ")) { $totals++ }; return $totals }
 $totals = total_count
-$totalss = total_counts
 
 function remove() {
-	total_count
+	total_count > $null 2>&1
 	Write-Host "You will remove those from the dotfiles" -foregroundcolor red
 	Write-Host "Continue to remove those? " -nonewline
 	$answer = Read-Host "[y\N]"
@@ -112,7 +111,7 @@ function remove() {
 }
 
 function sync() {
-	total_counts
+	total_counts > $null 2>&1
 	if ([string]::IsNullOrWhiteSpace($choice)) {
 		Write-Host "It'll  replace everything inside the dotfiles" -foregroundcolor red
 		Write-Host "with everything from the localhost" -foregroundcolor red
@@ -167,7 +166,7 @@ function sync() {
 }
 
 function apply() {
-	total_counts
+	total_counts > $null 2&>1
 	if ([string]::IsNullorWhiteSpace($choice)) {
 		Write-Host "It'll  replace everything on the local side" -foregroundcolor red
 		Write-Host "with everything from the dotfiles" -foregroundcolor red
