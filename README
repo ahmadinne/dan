@@ -55,8 +55,6 @@ Systems:
 	install scoop.
 	Step-by-step Installation on w11:
 		- open your terminal, and then paste command below (one by one)
-		- Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
-		- Invoke-RestMethod -Uri https://get.scoop.sh | Invoke-Expression
 		- git clone https://github.com/ahmadinne/dan
 		- cd dan
 		- .\install.ps1
