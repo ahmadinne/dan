@@ -111,7 +111,7 @@ function remove() {
 }
 
 function sync() {
-	total_counts > $null 2>&1
+	total_count > $null 2>&1
 	if ([string]::IsNullOrWhiteSpace($choice)) {
 		Write-Host "It'll  replace everything inside the dotfiles" -foregroundcolor red
 		Write-Host "with everything from the localhost" -foregroundcolor red
