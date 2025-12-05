@@ -166,7 +166,7 @@ function sync() {
 }
 
 function apply() {
-	total_counts > $null 2&>1
+	total_counts > $null 2>&1
 	if ([string]::IsNullorWhiteSpace($choice)) {
 		Write-Host "It'll  replace everything on the local side" -foregroundcolor red
 		Write-Host "with everything from the dotfiles" -foregroundcolor red
