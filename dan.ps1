@@ -80,9 +80,10 @@ function init() {
 	}
 }
 
-function total_count() { $totals = 0; foreach ($pkg in ($choice -split " ")) { $totals++ }; return $totals }
+function total_count() { $total = 0; foreach ($pkg in ($choice -split " ")) { $total++ }; return $total }
 function total_counts() { $totals = -1; foreach ($pkg in ($choice -split " ")) { $totals++ }; return $totals }
-$totals = total_count
+$total = total_count
+$totals = total_counts
 
 function remove() {
 	total_count > $null 2>&1
@@ -91,7 +92,7 @@ function remove() {
 	$answer = Read-Host "[y\N]"
 	if ($answer -eq "Y" -or $answer -eq "y") {
 		foreach ($pkg in ($choice -split " ")) {
-			Write-Host "(${number}\${totals}) $pkg" -nonewline
+			Write-Host "(${number}\${total}) $pkg" -nonewline
 			if (Test-Path "${lokasi}\${pkg}") {
 				# Delete choices in '.dan'
 				$rem = gc $dancfg | where {
@@ -140,7 +141,7 @@ function sync() {
 				# if existed in current directory, then
 				if (Test-Path "${curdir}\${pkg}") {
 					$pkg = Split-Path $pkg -Leaf
-					Write-Host "(${number}\${totals}) $pkg" -nonewline
+					Write-Host "(${number}\${total}) $pkg" -nonewline
 					# check if exist in .dan, if not add to .dan
 					$match = gc $dancfg | foreach { ($_ -split '\s+')[2] } | where { $_ -eq "${curdir}\${pkg}" }
 					if (-not $match) { 
@@ -154,7 +155,7 @@ function sync() {
 					cp -Recurse -Force -Confirm:$false "${curdir}\${pkg}" "$lokasi"
 					if ($?) { Write-Host " Copied" -foregroundcolor green } else { Write-Host " Failed" -foregroundcolor red } 
 				} else {
-					Write-Host "(${number}\${totals}) $pkg" -nonewline
+					Write-Host "(${number}\${total}) $pkg" -nonewline
 					$path = (gc $dancfg | sls -SimpleMatch $pkg | foreach { ($_ -split '=',2)[1].Trim() })
 					cp -Recurse -Force -Confirm:$false "$path" "$lokasi"
 					if ($?) { Write-Host " Copied" -foregroundcolor green } else { Write-Host " Failed" -foregroundcolor red } 
@@ -173,10 +174,10 @@ function apply() {
 		Write-Host "Continue to apply all? " -nonewline
 		$answer = Read-Host "[y\N]"
 		if ($answer -eq "Y" -or $answer -eq "y") {
-			foreach ($pkg in $pkglist) { $totals++ }
+			foreach ($pkg in $pkglist) { $total++ }
 			foreach ($pkg in $pkglist) {
 				$path = (gc $dancfg | sls -SimpleMatch $pkg | foreach { ($_ -split '=',2)[1].Trim() })
-				Write-Host "(${number}\${totals}) $pkg" -nonewline
+				Write-Host "(${number}\${total}) $pkg" -nonewline
 				if (Test-Path "${path}") { rm -Recurse -Force -Confirm:$false "${path}" } #Delete first if folders already there.
 				cp -Recurse -Force -Confirm:$false "${lokasi}/${pkg}" "$path"
 				if ($?) { Write-Host " Applied" -foregroundcolor green } else { Write-Host " Failed" -foregroundcolor red } 
