@@ -12,5 +12,6 @@ if (!(Test-Path $conf)) {
 	mkdir $conf
 }
 
-Copy-Item -Path "dan.ps1" -Destination "${path}\dan.ps1" -Force ||
+if (!(Copy-Item -Path "dan.ps1" -Destination "${path}\dan.ps1" -Force)) {
 	Copy-Item -Path "$env:USERPROFILE\Documents\dan\dan.ps1" -Destination "$path\dan.ps1" -Force
+}
