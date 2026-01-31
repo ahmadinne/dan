@@ -1,4 +1,5 @@
 #!/usr/bin/env powershell
+$curd = $(Get-Location)
 $path = "$env:USERPROFILE\Scripts"
 $conf = "$env:USERPROFILE\.config\dan"
 
@@ -12,4 +13,4 @@ if (!(Test-Path $conf)) {
 	mkdir $conf
 }
 
-Copy-Item -Path "dan.ps1" -Destination "${path}\dan.ps1" -Force
+Copy-Item -Path "$curd\dan.ps1" -Destination "${path}\dan.ps1" -Force
