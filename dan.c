@@ -1,3 +1,4 @@
+#include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -130,7 +131,60 @@ void help() {
 }
 
 void dlist() {
-	printf("[Stub] Listing dotfiles...\n");
+	if (strlen(dotfiles_path) == 0) {
+		printf("error: not a dan directory: .dan\n");
+		return;
+	}
+
+	const char *BLUE = "\033[1;34m";
+	const char *GRAY = "\033[1;70m";
+	const char *NONE = "\033[0m";
+	int DISTANCE = 30;
+
+	char display_path[512];
+	const char *home = getenv("HOME");
+
+	if (home != NULL && strncmp(dotfiles_path, home, strlen(home)) == 0) {
+		snprintf(display_path, sizeof(display_path), "~%s", dotfiles_path + strlen(home));
+	} else {
+		strcpy(display_path, dotfiles_path);
+	}
+
+	printf("%s##%s[%sDan%s] %s\n", GRAY, NONE, BLUE, NONE, display_path);
+
+	DIR *dir = opendir(dotfiles_path);
+	if (dir == NULL) {
+		printf("error: could not open dotfiles directory. \n");
+		return;
+	}
+
+	struct dirent *entry;
+	int is_empty = 1;
+
+	while ((entry = readdir(dir)) != NULL) {
+		if (strcmp(entry->d_name, ".") == 0 ||
+			strcmp(entry->d_name, "..") == 0 ||
+			strcmp(entry->d_name, ".dan") == 0) continue;
+
+		is_empty = 0;
+
+		char full_path[1024];
+		snprintf(full_path, sizeof(full_path), "%s/%s", dotfiles_path, entry->d_name);
+
+		struct stat st;
+		if (stat(full_path, &st) == 0) {
+			if (S_ISDIR(st.st_mode)) {
+				printf("%s-- %s  %-*s\n", GRAY, BLUE, DISTANCE, entry->d_name);
+			} else if (S_ISREG(st.st_mode)) {
+				printf("%s-- %s  %-*s\n", GRAY, NONE, DISTANCE, entry->d_name);
+			}
+		}
+	}
+	closedir(dir);
+
+	if (is_empty) {
+		printf("there's nothing inside your dotfiles(%s).\n", display_path);
+	}
 }
 
 void dinit(int argc, char *argv[]) {
@@ -148,6 +202,16 @@ void dinit(int argc, char *argv[]) {
 	} else {
 		snprintf(target, sizeof(target), "%s/%s", curdir, choice);
 	}
+
+	printf(":: Checking configuration file...\n");
+	char prompt[2048];
+	if (strlen(dotfiles_path) > 0) { // Check if path already set
+		snprintf(prompt, sizeof(prompt), "  Dotfiles path already set (%s)\n\n:: Rewrite to '%s'?", dotfiles_path, target);
+	} else {
+		snprintf(prompt, sizeof(prompt), ":: Initialize dotfiles path at '%s'?", target);
+	}
+
+	if (!confirmation(prompt)) return; // confirmation safety
 
 	FILE *cfg = fopen(config_file, "w"); // write the path to dan config
 	if (cfg == NULL) {
@@ -174,6 +238,10 @@ void dsync(int argc, char *argv[]) {
 			return;
 		}
 
+		char prompt[1024];
+		snprintf(prompt, sizeof(prompt), "[dan] Proceed to sync all?");
+		if (!confirmation(prompt)) return;
+
 		char line[1024];
 		while (fgets(line, sizeof(line), df)) {
 			char pkg_name[256];
@@ -185,9 +253,6 @@ void dsync(int argc, char *argv[]) {
                 char dest_path[1024];
                 snprintf(dest_path, sizeof(dest_path), "%s/%s", dotfiles_path, pkg_name);
                 sync_item(local_path, dest_path);
-            } else {
-                // DEBUG: Tell us if the string parsing failed!
-                printf("[DEBUG] sscanf failed! It only found %d items instead of 2.\n", parsed_count);
             }
 		}
 		fclose(df);
@@ -196,25 +261,37 @@ void dsync(int argc, char *argv[]) {
 
 	for (int i = 2; i < argc; i++) {
 		char *target = argv[i];
-		char dest[1024];
-		char dummy_path[1024];
+		char dst_path[1024];
+		char src_path[1024];
+		int alr_tracked = 0;
 
-		snprintf(dest, sizeof(dest), "%s/%s", dotfiles_path, target);
-		sync_item(target, dest);
+		snprintf(dst_path, sizeof(dst_path), "%s/%s", dotfiles_path, target);
 
-		if (get_local_path(target, dummy_path) == 0) {
-			FILE *df = fopen(dan_entry_file, "a");
-			if (df != NULL) {
-				char curdir[512];
-				if (getcwd(curdir, sizeof(curdir)) != NULL) {
-					fprintf(df, "%s = %s/%s\n", target, curdir, target);
+		if (get_local_path(target, src_path)) {
+			alr_tracked = 1;
+		} else {
+			char curdir[512];
+			if (getcwd(curdir, sizeof(src_path)) != NULL) {
+				if (strcmp(target, ".") == 0) {
+					snprintf(src_path, sizeof(src_path), "%s", curdir);
+				} else {
+					snprintf(src_path, sizeof(src_path), "%s/%s", curdir, target);
 				}
-
-				fclose(df);
+			} else {
+				perror("error: failed to get current directory");
+				continue;
 			}
-		} /* else {
-			printf("[dan] '%s' is already tracked in .dan, skipping path saving\n", target);
-		} */
+		}
+
+		if (sync_item(src_path, dst_path) == 0) {
+			if (!alr_tracked) {
+				FILE *df = fopen(dan_entry_file, "a");
+				if (df != NULL) {
+					fprintf(df, "%s = %s\n", target, src_path);
+					fclose(df);
+				}
+			}
+		}
 	}
 }
 
@@ -270,6 +347,11 @@ void dremove(int argc, char *argv[]) {
 		char target_path[1024];
 
 		snprintf(target_path, sizeof(target_path), "%s/%s", dotfiles_path, target);
+
+		char prompt[1024];
+		snprintf(prompt, sizeof(prompt), ":: Confirm remove '%s'?", target);
+		if (!confirmation(prompt)) continue;
+
 		printf("[dan] removing %s from dotfiles...\n", target);
 
 		remove_item(target_path);

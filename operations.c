@@ -80,7 +80,7 @@ int copy_dir(String src_dir, String dst_dir) {
 	return 0;
 }
 
-void sync_item(String src_path, String dst_path) {
+int sync_item(String src_path, String dst_path) {
 	struct stat st;
 	
 	if (stat(src_path, &st) == 0) { // check if the source path actually exists
@@ -91,8 +91,11 @@ void sync_item(String src_path, String dst_path) {
             printf("[Dan] Syncing file: %s -> %s\n", src_path, dst_path);
 			route_copy(src_path, dst_path);
         }
+
+		return 0;
     } else {
         printf("error: Target '%s' does not exist in the current directory.\n", src_path);
+		return 1;
     }
 }
 
@@ -122,4 +125,16 @@ void remove_item(String path) {
 			remove(path);
 		}
 	}
+}
+
+int confirmation(const char *message) {
+	printf("\n%s [Y/n]: ", message);
+	char response[10];
+
+	if (fgets(response, sizeof(response), stdin) != NULL) {
+		if (response[0] == 'n' || response[0] == 'N') {
+			return 0;
+		}
+	}
+	return 1;
 }
