@@ -1,15 +1,15 @@
-+-----------------------------------------------------------------------+
-|	DAN or Dotfile mANager, a tiny scripts used to ease	your dotfile	| 
-|	management systems. written in bash and powershell.					|
-+-----------------------------------------------------------------------+
-Dan is an independent hobby distribution made with a goal of being 
-compact, understandable, hackable, and easy to maintain.
++-------------------------------------------------------------------+
+|								DAN 								| 
+|		a tiny scripts used to ease	your dotfile management			|
++-------------------------------------------------------------------+
+Dan is a dotfile manager with purpose for personal use. If you found 
+it useful, leave a star for the repo ;D
 
 
 === Features
 ============
-Here are some of the features we had for now. These may change over time 
-as the project grows and develops:
+Here are some of the features we had for now. These may change over
+time as the project grows and develops:
 
 	- Sync
 
@@ -24,12 +24,25 @@ as the project grows and develops:
 	- List
 
 
-=== Codes
+=== Background
 =========
-The code is inspired by my dotfile manager project before this, it 
-called DotMan. But it had too many bugs and very dependant to linux, 
-meanwhile this DAN is not. But you still need bash or powershell, 
-because it is created with bash and powershell.
+The code is inspired by my previous dotfile manager, DotMan. 
+But it had too many bugs, so i abandoned it. And now i'm recreating
+the dotfile manager, but in C.
+
+
+=== Installation
+================
+Here are some installation tutorial step-by-step for some Operating
+Systems:
+
+	- Linux
+	You need to have git and gcc installed on your system.
+	Step-by-step installation on linux:
+		- Open your terminal, and then paste command below (one by one)
+		- git clone https://github.com/ahmadinne/dan.git; cd dan
+		- sudo make install
+	There you go, Dan is ready to use!
 
 
 === Inspiration
@@ -42,32 +55,6 @@ projects:
 	- DotMan (https://github.com/ahmadinne/dotman)
 
 	- Tin-Can Linux (https://tincan-linux.github.io/)
-
-
-=== Installation
-================
-Here are some installation tutorial step-by-step for some Operating
-Systems:
-
-	- Windows 11
-	You need to have Scoop and Powershell installed on your system.
-	Powershell already installed by system, So you just need to 
-	install scoop.
-	Step-by-step Installation on w11:
-		- open your terminal, and then paste command below (one by one)
-		- git clone https://github.com/ahmadinne/dan
-		- cd dan
-		- .\install.ps1
-	There you go, Dan is ready to use!
-
-	- Linux
-	You need to have git installed on your system.
-	Step-by-step installation on linux:
-		- Open your terminal, and then paste command below (one by one)
-		- git clone https://github.com/ahmadinne/dan
-		- cd dan
-		- cp -rf dan /usr/bin (if you will delete the folder)
-	There you go, Dan is ready to use!
 
 
 _________________________________________________________________________

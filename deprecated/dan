@@ -1,0 +1,203 @@
+#! /usr/bin/env bash
+
+# .-------.
+# | Todos |
+# '-------'
+# - Confirmation before do something, just like in dotman before.
+# - .danignore file to ignore file from dan syncall and dan applyall.
+# - or just make checking all file or folder inside dotfiles using cat .dan and not using ls.
+#
+# - Make every sync and remove trigger git commits so you can easily convert back to previous version using git.
+# - Maybe add 'dan reverse' to revert to previous commit?
+#
+# ,----------------,
+# | Optional To-Do |
+# '----------------'
+# - Buat biar dan ngga cuma bisa satu folder dan, namun
+#	bisa banyak folder dan,
+#
+#	example usage:
+#	> dan sync dotfile-1 alacritty scoop etc.
+#	> dan remove dotfile-1 scoop etc.
+
+# ,-----------,
+# | Variables |
+# '-----------'
+curdir=$(pwd) #Directory saat ini.
+option=$1 #input pertama setelah command, ex: 'dan aoacona'. aoacona adalah option.
+choice=$(echo "${@:2}") #input setelah command dan option, ex: 'dan aoacona satu dua tiga'. satu dua tiga adalah choice.
+cfgdir="$HOME/.config/dan" #Directory untuk menyimpan konfigurasi dan.
+config="$cfgdir/config" #File untuk menyimpan konfigurasi dan, saat ini hanya berisi path dotfiles yang telah di initialize.
+lokasi=$(cat ${config} | grep path | awk '{print $3}') #Path atau lokasi dotfiles yang telah di-initialize dan tersimpan di konfig dan.
+dancfg="${lokasi}/.dan" #List directory dan file yang sudah di sync ke dan. menyimpan path untuk sync dan apply dari dotfiles.
+pkglist=$(cat ${dancfg} | awk '{print $1}')
+totals=0 #Variable untuk menghitung total package atau directory atau file
+number=1 #Variable untuk menghitung package atau directory atau file
+
+# ,-----------,
+# | Functions |
+# '-----------'
+function help() {
+	cat <<EOF
+DAN
+a tiny and simple Dotfile mANager.
+
+usage: dan <operation> [...]
+operations:
+	dan help			Show the help page, list of operations and batch operations.
+	dan list			Show existing folder or files inside dotfiles.
+	dan init .			Initialize current directory as dotfiles directory.
+	dan sync [package(s)]		Add specified folder or file into dotfiles.
+	dan apply [package(s)]		Apply specified folder or file from dotfiles into local.
+	dan remove [package(s)]		Remove specified folder or file from dotfiles.
+
+batch operations:
+	dan sync			Sync all folder or files inside dotfiles with local.
+	dan apply			Apply all folder or files inside dotfiles into local.
+
+use 'dan help' to show this page.
+EOF
+	exit 1
+}
+
+function list() {
+    JARAK=30; BLUE="\033[1;34m"; BLACK="\033[0;30m"; NONE="\033[0m"
+    username=$(echo $(whoami))
+	dotfilepath=$(echo ${lokasi} | sed "s|/home/${username}|~|")
+	dotfilepath=$(echo ${lokasi} | sed "s|/c/Users/${username}|~|")
+    printf "${BLACK}##${NONE}[${BLUE}Dan${NONE}] ${dotfilepath}\n"
+    for list in $(ls -a ${lokasi}); do
+		if [[ "$list" != "." ]] && [[ "$list" != ".." ]]; then
+			if [ -d "${lokasi}/${list}" ]; then
+					printf "${BLACK}-- ${BLUE} "
+					printf "$(printf "%-${JARAK}s" "$list")${NONE}\n"
+			elif [ -f "${lokasi}/${list}" ]; then
+					printf "${BLACK}-- ${NONE} "
+					printf "$(printf "%-${JARAK}s" "$list")\n"
+			else
+				echo "there's nothing in your dotfiles($dotfilepath)."
+				echo "start syncing your configuration using 'dan sync'"
+			fi
+		fi
+    done
+}
+
+function init() {
+	if [ -z "$choice" ]; then
+		echo "please input the path or directory for initialize"
+		echo "example: 'dan init .' to current directory"
+		echo "example: 'dan init folder' to specified folder"
+		echo ""
+	else
+		if [[ "$choice" == "." ]]; then
+			touch ${curdir}/.dan 
+			echo "path = ${curdir}" > $config
+		else
+			touch ${curdir}/${choice}/.dan 
+			echo "path = ${curdir}/${choice}" > $config
+		fi
+	fi
+}
+
+function check() { if [[ ! -f "${curdir}/.dan" ]]; then echo -e "not a dan directory (.dan missing)\n'dan init' to make it dan.\n"; else echo -e "it is a dan directory :D\n'dan help' for list of options.\n"; fi }
+function total_count() { for PKG in ${choice[@]}; do totals=$((totals + 1)); done }
+
+function remove() {
+	total_count
+	for PKG in ${choice[@]}; do
+		if [[ -e "${lokasi}/${PKG}" ]]; then
+			# hapus pilihan pada .dan
+			path=$(cat ${dancfg} | grep $PKG | awk '{print $3}')
+			sed -i "\|${path}|d" $dancfg
+			# Hapus pilihan pada direktori dan
+			rm -rf ${lokasi}/${PKG}
+			# tambahin code buat hapus dari list di dalam .dan
+			[[ $? -eq 0 ]]; echo "($number/$totals) $PKG removed" \
+				|| echo "($number/$totals) $PKG failed to remove"
+		else
+			echo "there's no folder nor file named  $PKG in the dan!"
+		fi
+		number=$((number + 1))
+	done
+}
+
+function sync() {
+	total_count
+	if [[ -n "$choice" ]]; then
+		for PKG in ${choice[@]}; do
+			# kalau ada di dotfiles, hapus
+			if [[ -e "${lokasi}/${PKG}" ]]; then rm -rf "${lokasi}/${PKG}"; fi
+			# kalau ada di directory sekarang, tambahin ke .dan list dan copy ke $lokasi
+			if [[ -e "${curdir}/${PKG}" ]]; then 
+				# Cek kalau ada apa engga di list .dan
+				awk '{print $3}' $dancfg | grep -qx "${curdir}/$PKG" || echo "${PKG} = ${curdir}/${PKG}" >> $dancfg
+				cp -rf ${curdir}/${PKG} ${lokasi}
+			else
+				path=$(cat ${dancfg} | grep $PKG | awk '{print $3}')
+				cp -rf $path $lokasi
+			fi
+			[[ $? -eq 0 ]]; echo "($number/$totals) $PKG synced" \
+				|| echo "($number/$totals) $PKG failed to syncs"
+			number=$((number + 1))
+		done
+	else
+		for PKG in ${pkglist[@]}; do totals=$((totals + 1)); done
+		for PKG in ${pkglist[@]}; do
+			if [[ -e "${lokasi}/${PKG}" ]]; then rm -rf "${lokasi}/${PKG}"; fi
+			path=$(cat ${dancfg} | grep $PKG | awk '{print $3}')
+			cp -rf $path $lokasi
+			[[ $? -eq 0 ]]; echo "($number/$totals) $PKG synced" \
+				|| echo "($number/$totals) $PKG failed to sync."
+			number=$((number + 1))
+		done
+	fi
+}
+
+function apply() {
+	total_count
+	# Jika ada pkg yang diketik maka hanya meng-apply pkg tersebut, namun
+	# jika tidak ada pkg yang diketik, maka meng-apply ke semua pkg yang
+	# ada di dan.
+	if [[ -n "$choice" ]]; then
+		for PKG in ${choice[@]}; do
+			if [[ -e "${lokasi}/${PKG}" ]]; then 
+				path=$(cat ${dancfg} | grep $PKG | awk '{print $3}')
+				if [[ -e "${path}" ]]; then rm -rf ${path}; fi
+				cp -rf ${lokasi}/${PKG} $path
+				[[ $? -eq 0 ]]; echo "($number/$totals) $PKG applied to local" \
+					|| echo "($number/$totals) $PKG failed to apply to local."
+				number=$((number + 1))
+			else
+				echo "there's no dir nor file named $PKG in the dan"
+			fi
+		done
+	else
+		for PKG in ${pkglist[@]}; do totals=$((totals + 1)); done
+		for PKG in ${pkglist[@]}; do
+			path=$(cat ${dancfg} | grep $PKG | awk '{print $3}')
+			if [[ -e "${path}" ]]; then rm -rf ${path}; fi
+			cp -rf ${lokasi}/${PKG} $path
+			[[ $? -eq 0 ]]; echo "($number/$totals) $PKG applied to local" \
+				|| echo "($number/$totals) $PKG failed to apply to local."
+			number=$((number + 1))
+		done
+	fi
+}
+
+# ,---------,
+# | Run it! |
+# '---------'
+if [[ ! -f $config ]] && [[ ! -d $cfgdir ]] && [[ ! -d "$HOME/.config" ]]; then mkdir $HOME/.config && mkdir $cfgdir && touch $config; fi
+if [[ -n "$option" ]]; then
+	case $option in
+		help) help ;;
+		list) list ;;
+		init) init ;;
+		sync) sync ;;
+		apply) apply ;;
+		remove) remove ;;
+		*) echo "wrong options (use 'dan help' for options list)"
+	esac
+else
+	check
+fi
