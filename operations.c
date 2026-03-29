@@ -6,9 +6,9 @@
 #include <dirent.h>
 #include <unistd.h>
 
-typedef const char* Path;
+typedef const char* String;
 
-void route_copy(Path src_path, Path dst_path) {
+void route_copy(String src_path, String dst_path) {
 	struct stat st;
 	if (stat(src_path, &st) == 0) {
 		if (S_ISDIR(st.st_mode)) {
@@ -19,7 +19,7 @@ void route_copy(Path src_path, Path dst_path) {
 	}
 }
 
-int copy_file(Path src_path, Path dst_path) {
+int copy_file(String src_path, String dst_path) {
 	// rb means read binary, and wb means write binary
 	FILE *src = fopen(src_path, "rb");
 	if (src == NULL) {
@@ -49,7 +49,7 @@ int copy_file(Path src_path, Path dst_path) {
 	return 0;
 }
 
-int copy_dir(Path src_dir, Path dst_dir) {
+int copy_dir(String src_dir, String dst_dir) {
 	DIR *dir = opendir(src_dir); // open source dir
 	if (dir == NULL) {
 		perror("[err] failed to open source directory");
@@ -80,23 +80,23 @@ int copy_dir(Path src_dir, Path dst_dir) {
 	return 0;
 }
 
-void sync_item(Path src_path, Path dst_path) {
+void sync_item(String src_path, String dst_path) {
 	struct stat st;
-
-	// check if the source path actually exists
-	if (stat(src_path, &st) == 0) {
+	
+	if (stat(src_path, &st) == 0) { // check if the source path actually exists
 		if (S_ISDIR(st.st_mode)) {
             printf("[Dan] Syncing directory: %s -> %s\n", src_path, dst_path);
+			route_copy(src_path, dst_path);
         } else if (S_ISREG(st.st_mode)) {
             printf("[Dan] Syncing file: %s -> %s\n", src_path, dst_path);
+			route_copy(src_path, dst_path);
         }
-		route_copy(src_path, dst_path);
     } else {
         printf("error: Target '%s' does not exist in the current directory.\n", src_path);
     }
 }
 
-int remove_directory(Path path) {
+int remove_directory(String path) {
 	DIR *dir = opendir(path);
 	if (dir == NULL) return -1;
 
@@ -113,7 +113,7 @@ int remove_directory(Path path) {
 	return rmdir(path);
 }
 
-void remove_item(Path path) {
+void remove_item(String path) {
 	struct stat st;
 	if (stat(path, &st) == 0) {
 		if (S_ISDIR(st.st_mode)) {
